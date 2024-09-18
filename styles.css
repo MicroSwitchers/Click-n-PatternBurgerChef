@@ -1,4 +1,5 @@
 :root {
+  /* Primary and Secondary Colors */
   --primary-color: #FF6B35;     /* Bright orange */
   --secondary-color: #4CAF50;   /* Fresh green */
   --background-color: #FFF8E1;  /* Warm cream */
@@ -295,21 +296,23 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.9);
+  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity for subtlety */
   color: white;
-  padding: 15px 25px;
-  border-radius: 10px;
-  font-size: 1.2em;
+  padding: 10px 20px; /* Reduced padding for subtlety */
+  border-radius: 8px; /* Slightly smaller radius */
+  font-size: 1em; /* Slightly smaller font */
   text-align: center;
   animation: fadeInOut 4s ease-in-out infinite;
   pointer-events: none; /* Allow clicks to pass through */
+  transition: opacity 0.5s ease; /* Added transition for smooth fade-out */
+  opacity: 1; /* Initial opacity */
 }
 
 @keyframes fadeInOut {
   0%, 100% {
     opacity: 0;
   }
-  10%, 90% {
+  20%, 80% {
     opacity: 1;
   }
 }
@@ -329,10 +332,22 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 #toast.show {
   display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateX(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
 }
 
 /* Mistake Modal */
@@ -369,6 +384,12 @@ body {
 
 .close-button:hover {
   color: var(--accent-color);
+}
+
+#mistake-message {
+  white-space: pre-wrap; /* Allows line breaks */
+  font-size: 1em;
+  margin-top: 10px;
 }
 
 /* Mute Button */
@@ -472,17 +493,6 @@ body {
   100% { transform: scale(1); }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) translateX(-50%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) translateX(-50%);
-  }
-}
-
 @keyframes subtleBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -569,21 +579,23 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.9);
+  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity for subtlety */
   color: white;
-  padding: 15px 25px;
-  border-radius: 10px;
-  font-size: 1.2em;
+  padding: 10px 20px; /* Reduced padding for subtlety */
+  border-radius: 8px; /* Slightly smaller radius */
+  font-size: 1em; /* Slightly smaller font */
   text-align: center;
   animation: fadeInOut 4s ease-in-out infinite;
   pointer-events: none; /* Allow clicks to pass through */
+  transition: opacity 0.5s ease; /* Added transition for smooth fade-out */
+  opacity: 1; /* Initial opacity */
 }
 
 @keyframes fadeInOut {
   0%, 100% {
     opacity: 0;
   }
-  10%, 90% {
+  20%, 80% {
     opacity: 1;
   }
 }

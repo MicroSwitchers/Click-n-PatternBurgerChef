@@ -85,12 +85,6 @@ function playCompleteSound() {
     setTimeout(() => playTone(783.99, 0.2), 200); // G5 note, longer duration
 }
 
-// Toggle mute
-muteButton.addEventListener('click', () => {
-    isMuted = !isMuted;
-    muteButton.textContent = isMuted ? '🔇' : '🔊';
-});
-
 // Game State
 let ordersQueue = [];
 let currentOrder = [];
@@ -128,6 +122,7 @@ function initGame() {
     updateLevelIndicator();
     updateStrikesDisplay();
     setupInteractionHandlers();
+    showClickInstruction(); // Show instruction overlay on game start
 }
 
 // Utility function to shuffle an array (Fisher-Yates Shuffle)
@@ -153,7 +148,7 @@ function shuffle(array) {
 // Generate Random Orders based on current level
 function generateOrders() {
     ordersQueue = []; // Reset queue
-    const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level
+    const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level starting from level 2
     for (let i = 0; i < numberOfBurgers; i++) {
         ordersQueue.push(generateSingleOrder());
     }
@@ -413,6 +408,103 @@ function updatePressProgress(progress, ingredient) {
     if (ingredient === 'TOMATO') {
         color = '#ff6347';
     } else if (ingredient === 'ONION') {
+        color = '#ffa500';
+    } else if (ingredient === 'PICKLE') {
+        color = '#008000';
+    }
+    pressProgress.style.background = `conic-gradient(${color} ${degrees}deg, transparent ${degrees}deg)`;
+}
+
+function hidePressProgress() {
+    pressProgressContainer.style.display = 'none';
+}
+
+// Show Mistake Alert Modal
+function showMistakeAlert(ingredient) {
+    if (!mistakeModal) {
+        console.error('Mistake modal element not found');
+        return;
+    }
+
+    mistakeModal.style.display = 'block';
+    const modalContent = mistakeModal.querySelector('.modal-content');
+    const mistakeMessage = document.getElementById('mistake-message');
+
+    if (!modalContent || !mistakeMessage) {
+        console.error('Modal content or message element not found');
+        return;
+    }
+
+    let message = '';
+    switch (ingredient) {
+        case 'BOTTOM_BUN':
+        case 'TOP_BUN':
+            message = '🍞 Bun: Double Tap';
+            break;
+        case 'PATTY':
+            message = '🥩 Patty: Single Tap';
+            break;
+        case 'LETTUCE':
+            message = '🥬 Lettuce: Long Tap';
+            break;
+        case 'CHEESE':
+            message = '🧀 Cheese: Triple Tap';
+            break;
+        case 'TOMATO':
+            message = '🍅 Tomato: Single Tap + Long Tap';
+            break;
+        case 'ONION':
+            message = '🧅 Onion: Two Long Taps';
+            break;
+        case 'PICKLE':
+            message = '🥒 Pickle: Two Short Taps + Long Tap';
+            break;
+        default:
+            message = 'Try again!';
+    }
+
+    let strikeMessage = '';
+    if (strikes === 1) {
+        strikeMessage = 'Strike 1 - ⚠️ Strike 1: Restarting current burger.';
+    } else if (strikes === 2) {
+        strikeMessage = 'Strike 2 - ⚠️ Strike 2: Restarting level.';
+    } else if (strikes >= 3) {
+        strikeMessage = 'Strike 3 - ❌ Strike 3: Restarting game.';
+    }
+
+    mistakeMessage.innerHTML = `${strikeMessage}<br><br>${message}`;
+
+    // Re-trigger the animation
+    modalContent.style.animation = 'subtleBounce 0.5s ease-out';
+
+    // Reset burger after showing mistake
+    resetCurrentBurger();
+}
+
+// ... (rest of the code remains unchanged)
+
+function showPressProgress(isTomato = false, isOnion = false, isPickle = false) {
+    pressProgressContainer.style.display = 'flex';
+    pressProgress.style.background = 'conic-gradient(var(--secondary-color) 0deg, transparent 0deg)';
+    pressProgress.classList.remove('tomato', 'onion', 'pickle');
+
+    if (isTomato) {
+        pressProgress.classList.add('tomato');
+    }
+    if (isOnion) {
+        pressProgress.classList.add('onion');
+    }
+    if (isPickle) {
+        pressProgress.classList.add('pickle');
+    }
+}
+
+function updatePressProgress(progress, ingredient) {
+    const degrees = progress * 360;
+    let color = 'var(--secondary-color)';
+    if (ingredient === 'TOMATO') {
+        color = '#ff6347';
+    } else if (ingredient === 'ONION') {
         color = '#FFFFFF';
     } else if (ingredient === 'PICKLE') {
         color = '#4CAF50';
@@ -436,7 +528,7 @@ function setupInteractionHandlers() {
     container.addEventListener('mousedown', handlePressStart);
     container.addEventListener('mouseup', handlePressEnd);
 
-    // Use a separate listener for taps/clicks
+    // Click listener for building the burger
     container.addEventListener('click', (e) => {
         // Prevent immediate taps after a long press
         if (Date.now() - lastLongPressEnd >= TAP_DELAY_AFTER_LONG_PRESS) {
@@ -451,7 +543,10 @@ function setupInteractionHandlers() {
     });
 
     // Mute Button
-    muteButton.addEventListener('click', handleTap);
+    muteButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent the click from bubbling up to the active burger container
+        toggleMute();
+    });
 
     // Close Mistake Modal when clicking outside the content or on close button
     if (mistakeModal) {
@@ -471,6 +566,14 @@ function setupInteractionHandlers() {
             handleKeyboardTap(e);
         }
     });
+}
+
+/**
+ * Toggle the mute state and update the mute button icon accordingly.
+ */
+function toggleMute() {
+    isMuted = !isMuted;
+    muteButton.textContent = isMuted ? '🔇' : '🔊';
 }
 
 /**
@@ -502,8 +605,18 @@ function handleTap(e) {
     // Identify the element that was tapped
     const tappedElement = e.target.closest('.order-row, #active-burger-container, .instruction-example, #muteButton');
 
+    // If the mute button was clicked, do not proceed further
+    if (tappedElement && tappedElement.id === 'muteButton') {
+        return;
+    }
+
     // Trigger the tap effect on the tapped element
     triggerTapEffect(tappedElement);
+
+    // Hide the instruction overlay after the first interaction
+    if (tappedElement && tappedElement.id === 'active-burger-container') {
+        hideClickInstruction();
+    }
 
     // Proceed with existing tap handling logic
     // Ignore taps immediately after a long press
@@ -657,14 +770,14 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     switch (type) {
         case 'success':
-            toast.style.backgroundColor = 'rgba(76, 175, 80, 0.9)';
+            toast.style.backgroundColor = 'rgba(76, 175, 80, 0.9)'; // Green
             break;
         case 'error':
-            toast.style.backgroundColor = 'rgba(244, 67, 54, 0.9)';
+            toast.style.backgroundColor = 'rgba(244, 67, 54, 0.9)'; // Red
             break;
         case 'info':
         default:
-            toast.style.backgroundColor = 'rgba(33, 150, 243, 0.9)';
+            toast.style.backgroundColor = 'rgba(33, 150, 243, 0.9)'; // Blue
             break;
     }
     toast.classList.remove('show');
@@ -719,7 +832,16 @@ function showMistakeAlert(ingredient) {
             message = 'Try again!';
     }
 
-    mistakeMessage.textContent = `Game Over! You have ${strikes} strike(s). ${message}`;
+    let strikeMessage = '';
+    if (strikes === 1) {
+        strikeMessage = 'Strike 1 - ⚠️ Strike 1: Restarting Burger.';
+    } else if (strikes === 2) {
+        strikeMessage = 'Strike 2 - ⚠️ Strike 2: Restarting Level.';
+    } else if (strikes >= 3) {
+        strikeMessage = 'Strike 3 - ❌ Strike 3: Restarting Game.';
+    }
+
+    mistakeMessage.innerHTML = `${strikeMessage}<br><br>${message}`;
 
     // Re-trigger the animation
     modalContent.style.animation = 'subtleBounce 0.5s ease-out';
@@ -737,6 +859,7 @@ function advanceLevel() {
     generateOrders();
     displayOrders();
     loadCurrentOrder();
+    showClickInstruction(); // Show instruction overlay for the new level
 }
 
 // Update Level Indicator
@@ -766,13 +889,13 @@ function registerStrike() {
     updateStrikesDisplay();
 
     if (strikes === 1) {
-        showToast(`⚠️ Strike 1: Restarting current burger.`, 'error');
+        showToast(`Strike1 -⚠️ Strike 1: Restarting current burger.`, 'error');
         resetCurrentBurger();
     } else if (strikes === 2) {
-        showToast(`⚠️ Strike 2: Restarting level.`, 'error');
+        showToast(`Strike 2 - ⚠️ Strike 2: Restarting level.`, 'error');
         resetLevel();
     } else if (strikes >= 3) {
-        showToast(`❌ Strike 3: Restarting game.`, 'error');
+        showToast(`Strike 3 - ❌ Strike 3: Restarting game.`, 'error');
         resetGame();
     }
 }
@@ -807,6 +930,7 @@ function resetLevel() {
     generateOrders();
     displayOrders();
     loadCurrentOrder();
+    showClickInstruction(); // Show instruction overlay after level reset
 }
 
 // Reset Entire Game
@@ -819,6 +943,7 @@ function resetGame() {
     generateOrders();
     displayOrders();
     loadCurrentOrder();
+    showClickInstruction(); // Show instruction overlay after game reset
 }
 
 // Initialize the Game on Page Load
@@ -877,58 +1002,10 @@ function showClickInstruction() {
 // Hide Click Instruction Overlay
 function hideClickInstruction() {
     if (clickInstruction) {
-        clickInstruction.style.display = 'none';
-    }
-}
-
-// Modify handleTap to hide the instruction after first click
-function handleTap(e) {
-    e.preventDefault();
-
-    // Identify the element that was tapped
-    const tappedElement = e.target.closest('.order-row, #active-burger-container, .instruction-example, #muteButton');
-
-    // Trigger the tap effect on the tapped element
-    triggerTapEffect(tappedElement);
-
-    // Hide the instruction overlay after the first interaction
-    if (tappedElement && tappedElement.id === 'active-burger-container') {
-        hideClickInstruction();
-    }
-
-    // Proceed with existing tap handling logic
-    // Ignore taps immediately after a long press
-    if (Date.now() - lastLongPressEnd < TAP_DELAY_AFTER_LONG_PRESS) {
-        return;
-    }
-
-    const nextIngredient = currentOrder[userProgress.length];
-
-    switch (nextIngredient) {
-        case 'PATTY':
-            processIngredient('PATTY');
-            break;
-        case 'CHEESE':
-            handleCheeseInput();
-            break;
-        case 'BOTTOM_BUN':
-        case 'TOP_BUN':
-            handleBunInput();
-            break;
-        case 'TOMATO':
-            handleTomatoTap();
-            break;
-        case 'PICKLE':
-            handlePickleTap();
-            break;
-        case 'LETTUCE':
-        case 'ONION':
-            // Do nothing, these are handled by long press
-            registerStrike();
-            showMistakeAlert(nextIngredient);
-            break;
-        default:
-            registerStrike();
-            showMistakeAlert(nextIngredient);
+        clickInstruction.style.opacity = '0';
+        setTimeout(() => {
+            clickInstruction.style.display = 'none';
+            clickInstruction.style.opacity = '1'; // Reset opacity for future use
+        }, 500); // Match with CSS transition if any
     }
 }
