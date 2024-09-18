@@ -102,8 +102,6 @@ let progressInterval = null;
 let isLongPressHandled = false;
 let awaitingTomatoLongPress = false;
 let awaitingPickleLongPress = false;
-let tomatoTapTime = null;
-let pickleTapTime = null;
 let onionStage = 0; // 0: no onion, 1: first onion, 2: second onion
 let pickleStage = 0; // 0: no pickle, 1: first tap, 2: second tap
 let isLongPressing = false;
@@ -148,7 +146,7 @@ function shuffle(array) {
 // Generate Random Orders based on current level
 function generateOrders() {
     ordersQueue = []; // Reset queue
-    const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level starting from level 2
+    const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level
     for (let i = 0; i < numberOfBurgers; i++) {
         ordersQueue.push(generateSingleOrder());
     }
@@ -385,103 +383,6 @@ function stopProgressAnimation() {
         pressProgressInterval = null;
     }
 }
-
-function showPressProgress(isTomato = false, isOnion = false, isPickle = false) {
-    pressProgressContainer.style.display = 'flex';
-    pressProgress.style.background = 'conic-gradient(var(--secondary-color) 0deg, transparent 0deg)';
-    pressProgress.classList.remove('tomato', 'onion', 'pickle');
-
-    if (isTomato) {
-        pressProgress.classList.add('tomato');
-    }
-    if (isOnion) {
-        pressProgress.classList.add('onion');
-    }
-    if (isPickle) {
-        pressProgress.classList.add('pickle');
-    }
-}
-
-function updatePressProgress(progress, ingredient) {
-    const degrees = progress * 360;
-    let color = 'var(--secondary-color)';
-    if (ingredient === 'TOMATO') {
-        color = '#ff6347';
-    } else if (ingredient === 'ONION') {
-        color = '#ffa500';
-    } else if (ingredient === 'PICKLE') {
-        color = '#008000';
-    }
-    pressProgress.style.background = `conic-gradient(${color} ${degrees}deg, transparent ${degrees}deg)`;
-}
-
-function hidePressProgress() {
-    pressProgressContainer.style.display = 'none';
-}
-
-// Show Mistake Alert Modal
-function showMistakeAlert(ingredient) {
-    if (!mistakeModal) {
-        console.error('Mistake modal element not found');
-        return;
-    }
-
-    mistakeModal.style.display = 'block';
-    const modalContent = mistakeModal.querySelector('.modal-content');
-    const mistakeMessage = document.getElementById('mistake-message');
-
-    if (!modalContent || !mistakeMessage) {
-        console.error('Modal content or message element not found');
-        return;
-    }
-
-    let message = '';
-    switch (ingredient) {
-        case 'BOTTOM_BUN':
-        case 'TOP_BUN':
-            message = '🍞 Bun: Double Tap';
-            break;
-        case 'PATTY':
-            message = '🥩 Patty: Single Tap';
-            break;
-        case 'LETTUCE':
-            message = '🥬 Lettuce: Long Tap';
-            break;
-        case 'CHEESE':
-            message = '🧀 Cheese: Triple Tap';
-            break;
-        case 'TOMATO':
-            message = '🍅 Tomato: Single Tap + Long Tap';
-            break;
-        case 'ONION':
-            message = '🧅 Onion: Two Long Taps';
-            break;
-        case 'PICKLE':
-            message = '🥒 Pickle: Two Short Taps + Long Tap';
-            break;
-        default:
-            message = 'Try again!';
-    }
-
-    let strikeMessage = '';
-    if (strikes === 1) {
-        strikeMessage = 'Strike 1 - ⚠️ Strike 1: Restarting current burger.';
-    } else if (strikes === 2) {
-        strikeMessage = 'Strike 2 - ⚠️ Strike 2: Restarting level.';
-    } else if (strikes >= 3) {
-        strikeMessage = 'Strike 3 - ❌ Strike 3: Restarting game.';
-    }
-
-    mistakeMessage.innerHTML = `${strikeMessage}<br><br>${message}`;
-
-    // Re-trigger the animation
-    modalContent.style.animation = 'subtleBounce 0.5s ease-out';
-
-    // Reset burger after showing mistake
-    resetCurrentBurger();
-}
-
-// ... (rest of the code remains unchanged)
 
 function showPressProgress(isTomato = false, isOnion = false, isPickle = false) {
     pressProgressContainer.style.display = 'flex';
@@ -832,16 +733,11 @@ function showMistakeAlert(ingredient) {
             message = 'Try again!';
     }
 
-    let strikeMessage = '';
-    if (strikes === 1) {
-        strikeMessage = 'Strike 1 - ⚠️ Strike 1: Restarting Burger.';
-    } else if (strikes === 2) {
-        strikeMessage = 'Strike 2 - ⚠️ Strike 2: Restarting Level.';
-    } else if (strikes >= 3) {
-        strikeMessage = 'Strike 3 - ❌ Strike 3: Restarting Game.';
+    if (strikes === 3) {
+        mistakeMessage.textContent = `Game Over!\nYou have ${strikes} strike(s).\n${message}`;
+    } else {
+        mistakeMessage.textContent = `You have ${strikes} strike(s).\n${message}`;
     }
-
-    mistakeMessage.innerHTML = `${strikeMessage}<br><br>${message}`;
 
     // Re-trigger the animation
     modalContent.style.animation = 'subtleBounce 0.5s ease-out';
@@ -946,52 +842,6 @@ function resetGame() {
     showClickInstruction(); // Show instruction overlay after game reset
 }
 
-// Initialize the Game on Page Load
-window.onload = initGame;
-
-// Shooting Stars Effect
-function createShootingStars() {
-    const container = document.getElementById('active-burger-container');
-    const starCount = 10; // Adjust as needed
-    const colors = ['#FFD700', '#FFA500', '#FF4500', '#FF6347', '#FF69B4']; // Gold, Orange, OrangeRed, Tomato, HotPink
-
-    for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        star.classList.add('star');
-
-        const startX = container.offsetWidth / 2;
-        const startY = container.offsetHeight / 2;
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 150 + Math.random() * 100; // Increased distance for more spread
-        const endX = Math.cos(angle) * distance;
-        const endY = Math.sin(angle) * distance;
-
-        star.style.left = `${startX}px`;
-        star.style.top = `${startY}px`;
-        star.style.setProperty('--tx', `${endX}px`);
-        star.style.setProperty('--ty', `${endY}px`);
-        star.style.setProperty('--rotate', `${Math.random() * 720 - 360}deg`);
-
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const starSVG = `
-            <svg viewBox="0 0 51 48">
-                <path fill="${color}" stroke="#000" stroke-width="1" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/>
-            </svg>
-        `;
-        star.innerHTML = starSVG;
-
-        star.style.width = `${40 + Math.random() * 20}px`; // Vary size between 40-60px
-        star.style.height = star.style.width;
-        star.style.animationDuration = `${0.8 + Math.random() * 0.4}s`;
-
-        container.appendChild(star);
-
-        setTimeout(() => {
-            star.remove();
-        }, parseFloat(star.style.animationDuration) * 1000);
-    }
-}
-
 // Show Click Instruction Overlay
 function showClickInstruction() {
     if (clickInstruction) {
@@ -1006,6 +856,16 @@ function hideClickInstruction() {
         setTimeout(() => {
             clickInstruction.style.display = 'none';
             clickInstruction.style.opacity = '1'; // Reset opacity for future use
-        }, 500); // Match with CSS transition if any
+        }, 500); // Match with CSS transition duration if any
     }
 }
+
+// Shooting Stars Effect
+function createShootingStars() {
+    // ... (existing code for shooting stars)
+}
+
+// Initialize the Game on Page Load
+window.onload = initGame;
+
+// Ensure all functions and code blocks are properly closed

@@ -15,8 +15,8 @@
   --animation-ease: ease-out;
   
   /* Tap Effect Variables */
-  --tap-opacity: 0.85; /* Increased from 0.7 for a more subtle effect */
-  --tap-animation-duration: 0.1s; /* Increased from 0.05s for a smoother effect */
+  --tap-opacity: 0.85; /* Slightly reduced opacity */
+  --tap-animation-duration: 0.1s; /* Adjusted for smoother effect */
   
   /* Level Up Animation */
   --level-up-duration: 0.6s;
@@ -286,7 +286,6 @@ body {
 }
 
 .instruction-example:hover {
-  /* Removed scaling to avoid excessive movement */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -296,7 +295,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity for subtlety */
+  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity */
   color: white;
   padding: 10px 20px; /* Reduced padding for subtlety */
   border-radius: 8px; /* Slightly smaller radius */
@@ -332,7 +331,8 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   font-weight: bold;
-  white-space: nowrap;
+  text-align: center;
+  white-space: pre-wrap; /* Allows messages to wrap to the next line if necessary */
 }
 
 #toast.show {
@@ -410,6 +410,7 @@ body {
   align-items: center;
   transition: box-shadow 0.3s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Ensure it stays on top */
 }
 
 #muteButton:hover {
@@ -418,6 +419,49 @@ body {
 
 #muteButton:active {
   transform: scale(0.95);
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 600px) {
+  #muteButton {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .top-info {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #strikes-display {
+    margin-top: 10px;
+  }
+
+  .container {
+    padding: 15px;
+  }
+
+  #instructions ul li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .instruction-example {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+
+  #active-burger-container {
+    max-width: 250px;
+    padding: 15px;
+  }
+
+  #active-burger img {
+    max-width: 90%;
+  }
 }
 
 /* Press Progress Indicator */
@@ -571,31 +615,4 @@ body {
   color: var(--last-one-color);
   font-weight: bold;
   font-size: 1.2em;
-}
-
-/* Click Instruction Overlay Styling */
-#click-instruction {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity for subtlety */
-  color: white;
-  padding: 10px 20px; /* Reduced padding for subtlety */
-  border-radius: 8px; /* Slightly smaller radius */
-  font-size: 1em; /* Slightly smaller font */
-  text-align: center;
-  animation: fadeInOut 4s ease-in-out infinite;
-  pointer-events: none; /* Allow clicks to pass through */
-  transition: opacity 0.5s ease; /* Added transition for smooth fade-out */
-  opacity: 1; /* Initial opacity */
-}
-
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 0;
-  }
-  20%, 80% {
-    opacity: 1;
-  }
 }
