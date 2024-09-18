@@ -41,6 +41,7 @@ const activeBurgerContainer = document.getElementById('active-burger-container')
 const muteButton = document.getElementById('muteButton');
 const levelIndicator = document.getElementById('level-indicator');
 const strikesDisplay = document.getElementById('strikes-display');
+const clickInstruction = document.getElementById('click-instruction');
 
 // Audio context
 let audioContext;
@@ -96,9 +97,6 @@ let currentOrder = [];
 let userProgress = [];
 let currentLevel = 1;
 let strikes = 0;
-
-// Optional Ingredients Pool
-let currentOptionalIngredients = [];
 
 // Interaction Variables
 let clickCount = 0;
@@ -156,16 +154,6 @@ function shuffle(array) {
 function generateOrders() {
     ordersQueue = []; // Reset queue
     const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level
-
-    // Update optional ingredients pool
-    if (currentLevel - 1 > currentOptionalIngredients.length && currentLevel - 1 <= MAX_OPTIONAL_INGREDIENTS) {
-        // Add one new optional ingredient from the predefined list
-        const newIngredient = OPTIONAL_INGREDIENTS_ORDER[currentOptionalIngredients.length];
-        if (newIngredient) {
-            currentOptionalIngredients.push(newIngredient);
-        }
-    }
-
     for (let i = 0; i < numberOfBurgers; i++) {
         ordersQueue.push(generateSingleOrder());
     }
@@ -175,11 +163,18 @@ function generateOrders() {
 function generateSingleOrder() {
     let order = ['BOTTOM_BUN', 'PATTY']; // Always start with bottom bun and patty
 
-    if (currentOptionalIngredients.length > 0) {
-        // Shuffle the optional ingredients to randomize their order within the burger
-        let shuffledOptional = shuffle([...currentOptionalIngredients]);
+    if (currentLevel > 1) {
+        // Determine number of optional ingredients: one per level starting from level 2
+        let numOptional = 1; // Only one ingredient per level
+        if (numOptional > MAX_OPTIONAL_INGREDIENTS) numOptional = MAX_OPTIONAL_INGREDIENTS;
+        // Shuffle the optional ingredients to ensure variety
+        let shuffledOptional = shuffle([...OPTIONAL_INGREDIENTS_ORDER]);
+        // Select the required number of optional ingredients
+        let selectedOptional = shuffledOptional.slice(0, numOptional);
+        // Shuffle the selected optional ingredients to randomize their order within the burger
+        selectedOptional = shuffle(selectedOptional);
         // Add optional ingredients to the order
-        order = [...order, ...shuffledOptional];
+        order = [...order, ...selectedOptional];
     }
 
     order.push('TOP_BUN'); // Always end with top bun
@@ -200,7 +195,7 @@ function displayOrders() {
     if (ordersQueue.length > 1) {
         populateOrderContent(nextOrderContent, ordersQueue[1]); // Next order in line
     } else if (ordersQueue.length === 1) {
-        nextOrderContent.textContent = ' Last One!';
+        nextOrderContent.textContent = 'Last One!';
         nextOrderContent.classList.add('last-one');
     } else {
         nextOrderContent.textContent = '';
@@ -468,6 +463,14 @@ function setupInteractionHandlers() {
     } else {
         console.error('Mistake modal element not found');
     }
+
+    // Keyboard Accessibility: Space Bar and Enter Key
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault(); // Prevent default actions like scrolling
+            handleKeyboardTap(e);
+        }
+    });
 }
 
 /**
@@ -536,6 +539,15 @@ function handleTap(e) {
         default:
             registerStrike();
             showMistakeAlert(nextIngredient);
+    }
+}
+
+// Handle Keyboard Taps
+function handleKeyboardTap(e) {
+    // Simulate a click/tap on the active burger container
+    const container = document.getElementById('active-burger-container');
+    if (container) {
+        container.click();
     }
 }
 
@@ -802,7 +814,6 @@ function resetGame() {
     showToast(`🔁 Game Restarted from Level 1.`, 'info');
     currentLevel = 1;
     strikes = 0;
-    currentOptionalIngredients = []; // Reset optional ingredients pool
     updateLevelIndicator();
     updateStrikesDisplay();
     generateOrders();
@@ -853,5 +864,71 @@ function createShootingStars() {
         setTimeout(() => {
             star.remove();
         }, parseFloat(star.style.animationDuration) * 1000);
+    }
+}
+
+// Show Click Instruction Overlay
+function showClickInstruction() {
+    if (clickInstruction) {
+        clickInstruction.style.display = 'flex';
+    }
+}
+
+// Hide Click Instruction Overlay
+function hideClickInstruction() {
+    if (clickInstruction) {
+        clickInstruction.style.display = 'none';
+    }
+}
+
+// Modify handleTap to hide the instruction after first click
+function handleTap(e) {
+    e.preventDefault();
+
+    // Identify the element that was tapped
+    const tappedElement = e.target.closest('.order-row, #active-burger-container, .instruction-example, #muteButton');
+
+    // Trigger the tap effect on the tapped element
+    triggerTapEffect(tappedElement);
+
+    // Hide the instruction overlay after the first interaction
+    if (tappedElement && tappedElement.id === 'active-burger-container') {
+        hideClickInstruction();
+    }
+
+    // Proceed with existing tap handling logic
+    // Ignore taps immediately after a long press
+    if (Date.now() - lastLongPressEnd < TAP_DELAY_AFTER_LONG_PRESS) {
+        return;
+    }
+
+    const nextIngredient = currentOrder[userProgress.length];
+
+    switch (nextIngredient) {
+        case 'PATTY':
+            processIngredient('PATTY');
+            break;
+        case 'CHEESE':
+            handleCheeseInput();
+            break;
+        case 'BOTTOM_BUN':
+        case 'TOP_BUN':
+            handleBunInput();
+            break;
+        case 'TOMATO':
+            handleTomatoTap();
+            break;
+        case 'PICKLE':
+            handlePickleTap();
+            break;
+        case 'LETTUCE':
+        case 'ONION':
+            // Do nothing, these are handled by long press
+            registerStrike();
+            showMistakeAlert(nextIngredient);
+            break;
+        default:
+            registerStrike();
+            showMistakeAlert(nextIngredient);
     }
 }
