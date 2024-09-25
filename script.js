@@ -1,13 +1,13 @@
-// Define Ingredients with Emoticons
+// Define Ingredients with SVG File Paths
 const INGREDIENTS = {
-    BOTTOM_BUN: '🍞',
-    TOP_BUN: '🍞',
-    PATTY: '🥩',
-    LETTUCE: '🥬',
-    CHEESE: '🧀',
-    TOMATO: '🍅',
-    ONION: '🧅',
-    PICKLE: '🥒'
+    BOTTOM_BUN: 'images/ibunb.svg', // bun bottom
+    TOP_BUN: 'images/ibunt.svg',    // bun top
+    PATTY: 'images/ipat.svg',       // patty
+    LETTUCE: 'images/ilet.svg',     // lettuce
+    CHEESE: 'images/iche.svg',      // cheese
+    TOMATO: 'images/itom.svg',      // tomato
+    ONION: 'images/ioni.svg',       // onion
+    PICKLE: 'images/ipik.svg'       // pickle
 };
 
 // Mapping of Ingredients to Image Filenames (for the active burger)
@@ -23,12 +23,16 @@ const INGREDIENT_IMAGES = {
     PICKLE: 'images/pic.png'
 };
 
-// Optional Ingredients Order
-const OPTIONAL_INGREDIENTS_ORDER = ['LETTUCE', 'CHEESE', 'TOMATO', 'ONION', 'PICKLE'];
-
-// Game Configuration
-const INITIAL_BURGERS = 2; // Starting with 2 orders in Level 1
-const MAX_OPTIONAL_INGREDIENTS = OPTIONAL_INGREDIENTS_ORDER.length;
+// Level progression ingredients
+const LEVEL_INGREDIENTS = {
+    1: ['PATTY'],
+    2: ['PATTY', 'LETTUCE'],
+    3: ['PATTY', 'LETTUCE', 'CHEESE'],
+    4: ['PATTY', 'LETTUCE', 'CHEESE', 'TOMATO'],
+    5: ['PATTY', 'LETTUCE', 'CHEESE', 'TOMATO', 'ONION'],
+    6: ['PATTY', 'LETTUCE', 'CHEESE', 'TOMATO', 'ONION', 'PICKLE'],
+    // You can add more levels if desired
+};
 
 // DOM Elements
 const activeBurger = document.getElementById('active-burger');
@@ -108,7 +112,7 @@ let isLongPressing = false;
 let pressProgressInterval = null;
 let lastLongPressEnd = 0;
 let actionProcessed = false;
-const LONG_PRESS_THRESHOLD = 500; // milliseconds
+const LONG_PRESS_THRESHOLD = 300; // Reduced from 500ms to 300ms
 const TAP_DELAY_AFTER_LONG_PRESS = 300; // milliseconds
 
 // Initialize the Game
@@ -146,7 +150,7 @@ function shuffle(array) {
 // Generate Random Orders based on current level
 function generateOrders() {
     ordersQueue = []; // Reset queue
-    const numberOfBurgers = INITIAL_BURGERS + (currentLevel - 1); // Adding one order per level
+    const numberOfBurgers = 2; // Starting with 2 orders per level
     for (let i = 0; i < numberOfBurgers; i++) {
         ordersQueue.push(generateSingleOrder());
     }
@@ -154,23 +158,31 @@ function generateOrders() {
 
 // Generate a single order
 function generateSingleOrder() {
-    let order = ['BOTTOM_BUN', 'PATTY']; // Always start with bottom bun and patty
+    let order = ['BOTTOM_BUN']; // Always start with bottom bun
 
-    if (currentLevel > 1) {
-        // Determine number of optional ingredients: one per level starting from level 2
-        let numOptional = 1; // Only one ingredient per level
-        if (numOptional > MAX_OPTIONAL_INGREDIENTS) numOptional = MAX_OPTIONAL_INGREDIENTS;
-        // Shuffle the optional ingredients to ensure variety
-        let shuffledOptional = shuffle([...OPTIONAL_INGREDIENTS_ORDER]);
-        // Select the required number of optional ingredients
-        let selectedOptional = shuffledOptional.slice(0, numOptional);
-        // Shuffle the selected optional ingredients to randomize their order within the burger
-        selectedOptional = shuffle(selectedOptional);
-        // Add optional ingredients to the order
-        order = [...order, ...selectedOptional];
+    // Get the ingredients for the current level
+    let ingredientsForLevel = LEVEL_INGREDIENTS[currentLevel];
+
+    if (!ingredientsForLevel) {
+        // If currentLevel exceeds defined levels, use the maximum level ingredients
+        ingredientsForLevel = LEVEL_INGREDIENTS[6];
     }
 
-    order.push('TOP_BUN'); // Always end with top bun
+    // The patty is always included and should be after the bottom bun
+    order.push('PATTY');
+
+    // Get optional ingredients (excluding 'PATTY')
+    let optionalIngredients = ingredientsForLevel.slice(1); // Exclude 'PATTY'
+
+    // Shuffle the optional ingredients to randomize their order
+    optionalIngredients = shuffle(optionalIngredients);
+
+    // Add optional ingredients to the order
+    order = [...order, ...optionalIngredients];
+
+    // Add top bun
+    order.push('TOP_BUN');
+
     return order;
 }
 
@@ -196,14 +208,15 @@ function displayOrders() {
     }
 }
 
-// Populate order content with emoticons
+// Populate order content with SVG images
 function populateOrderContent(contentElement, order) {
     contentElement.innerHTML = ''; // Clear existing content
     order.forEach(ingredient => {
-        const emoticon = document.createElement('span');
-        emoticon.textContent = INGREDIENTS[ingredient];
-        emoticon.classList.add('burger-emoticon');
-        contentElement.appendChild(emoticon);
+        const img = document.createElement('img');
+        img.src = INGREDIENTS[ingredient];
+        img.alt = ingredient.replace('_', ' '); // e.g., 'BOTTOM BUN'
+        img.classList.add('burger-emoticon');
+        contentElement.appendChild(img);
     });
 }
 
@@ -368,7 +381,7 @@ function startProgressAnimation(ingredient) {
     pressStartTime = Date.now();
     let progress = 0;
     pressProgressInterval = setInterval(() => {
-        progress = Math.min((Date.now() - pressStartTime) / 500, 1);
+        progress = Math.min((Date.now() - pressStartTime) / 200, 1);  // Use updated threshold
         updatePressProgress(progress, ingredient);
         if (progress >= 1) {
             stopProgressAnimation();
@@ -496,7 +509,7 @@ function triggerTapEffect(element) {
     // Remove the tap-effect class after the animation duration
     setTimeout(() => {
         element.classList.remove('tap-effect-opacity');
-    }, 100); // Increased from 50ms to 100ms to match the new animation duration
+    }, 100); // Match with CSS animation duration
 }
 
 // Handle Clicks and Taps
@@ -565,30 +578,6 @@ function handleKeyboardTap(e) {
     }
 }
 
-function processOnion() {
-    onionStage++;
-    if (onionStage === 1) {
-        renderOnionLayer('ONION');
-    } else if (onionStage === 2) {
-        replaceOnionLayer();
-        processIngredient('ONION');
-    }
-}
-
-function renderOnionLayer(ingredient) {
-    const layer = createIngredientLayer(ingredient, userProgress.length);
-    activeBurger.appendChild(layer);
-    playPlaceSound();
-}
-
-function replaceOnionLayer() {
-    const onionLayers = activeBurger.querySelectorAll('img[src="images/oni.png"]');
-    if (onionLayers.length > 0) {
-        const lastOnionLayer = onionLayers[onionLayers.length - 1];
-        lastOnionLayer.src = 'images/oni2.png';
-    }
-}
-
 function handleCheeseInput() {
     clickCount++;
     if (clickTimer) clearTimeout(clickTimer);
@@ -615,6 +604,30 @@ function handleBunInput() {
         }
         clickCount = 0;
     }, 300);
+}
+
+function processOnion() {
+    onionStage++;
+    if (onionStage === 1) {
+        renderOnionLayer('ONION');
+    } else if (onionStage === 2) {
+        replaceOnionLayer();
+        processIngredient('ONION');
+    }
+}
+
+function renderOnionLayer(ingredient) {
+    const layer = createIngredientLayer(ingredient, userProgress.length);
+    activeBurger.appendChild(layer);
+    playPlaceSound();
+}
+
+function replaceOnionLayer() {
+    const onionLayers = activeBurger.querySelectorAll('img[src="images/oni.png"]');
+    if (onionLayers.length > 0) {
+        const lastOnionLayer = onionLayers[onionLayers.length - 1];
+        lastOnionLayer.src = 'images/oni2.png';
+    }
 }
 
 // Process the Added Ingredient
@@ -655,7 +668,7 @@ function activeBurgerContainerAnimation() {
     activeBurgerContainer.classList.add('burger-completed');
     setTimeout(() => {
         activeBurgerContainer.classList.remove('burger-completed');
-    }, 1000);
+    }, 300); // Adjusted to match new animation duration
 }
 
 // Reset the Current Burger to a Blank State
@@ -748,14 +761,20 @@ function showMistakeAlert(ingredient) {
 
 // Advance to the Next Level
 function advanceLevel() {
-    currentLevel++;
-    showToast(`🎉 Level ${currentLevel} Achieved!`, 'success');
-    animateLevelIndicator();
-    updateLevelIndicator();
-    generateOrders();
-    displayOrders();
-    loadCurrentOrder();
-    showClickInstruction(); // Show instruction overlay for the new level
+    if (currentLevel < Object.keys(LEVEL_INGREDIENTS).length) {
+        currentLevel++;
+        showToast(`🎉 Level ${currentLevel} Achieved!`, 'success');
+        animateLevelIndicator();
+        updateLevelIndicator();
+        generateOrders();
+        displayOrders();
+        loadCurrentOrder();
+        showClickInstruction(); // Show instruction overlay for the new level
+    } else {
+        // Maximum level reached
+        showToast(`🎉 You have completed all levels!`, 'success');
+        // You can add additional functionality here if desired
+    }
 }
 
 // Update Level Indicator
@@ -785,13 +804,13 @@ function registerStrike() {
     updateStrikesDisplay();
 
     if (strikes === 1) {
-        showToast(`Strike1 -⚠️ Strike 1: Restarting current burger.`, 'error');
+        showToast(`⚠️ Strike 1: Restarting current burger.`, 'error');
         resetCurrentBurger();
     } else if (strikes === 2) {
-        showToast(`Strike 2 - ⚠️ Strike 2: Restarting level.`, 'error');
+        showToast(`⚠️ Strike 2: Restarting level.`, 'error');
         resetLevel();
     } else if (strikes >= 3) {
-        showToast(`Strike 3 - ❌ Strike 3: Restarting game.`, 'error');
+        showToast(`❌ Strike 3: Restarting game.`, 'error');
         resetGame();
     }
 }
@@ -862,7 +881,39 @@ function hideClickInstruction() {
 
 // Shooting Stars Effect
 function createShootingStars() {
-    // ... (existing code for shooting stars)
+    const numberOfStars = 5; // Adjust number of shooting stars as desired
+    for (let i = 0; i < numberOfStars; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+
+        // Calculate the center position of the burger container
+        const containerRect = activeBurgerContainer.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+
+        // Set initial position to the center of the burger container
+        star.style.left = `${centerX}px`;
+        star.style.top = `${centerY}px`;
+
+        // Random movement direction
+        const tx = Math.random() * 100 - 50; // Reduced movement range for shorter animation
+        const ty = Math.random() * 100 - 50; // Reduced movement range for shorter animation
+
+        // Set CSS variables for animation
+        star.style.setProperty('--tx', `${tx}px`);
+        star.style.setProperty('--ty', `${ty}px`);
+
+        // Random delay to stagger the shooting stars
+        star.style.animationDelay = `${Math.random() * 0.6}s`; // Reduced delay
+
+        // Append the star to the burger container
+        activeBurgerContainer.appendChild(star);
+
+        // Remove the star after animation completes
+        star.addEventListener('animationend', () => {
+            star.remove();
+        });
+    }
 }
 
 // Initialize the Game on Page Load

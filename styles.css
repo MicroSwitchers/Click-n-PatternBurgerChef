@@ -2,6 +2,7 @@
   /* Primary and Secondary Colors */
   --primary-color: #FF6B35;     /* Bright orange */
   --secondary-color: #4CAF50;   /* Fresh green */
+  --neutral-color: #f0f0f0;     /* Neutral grey for instruction backgrounds */
   --background-color: #FFF8E1;  /* Warm cream */
   --text-color: #3E2723;        /* Dark brown */
   --card-background: #FFFFFF;   /* White */
@@ -137,7 +138,7 @@ body {
   align-items: center;
   transition: box-shadow 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 60px; /* Fixed height for uniformity */
+  height: 30px; /* Fixed height for uniformity */
 }
 
 .order-row:hover {
@@ -146,10 +147,12 @@ body {
 
 .order-row.now {
   border: 3px solid var(--secondary-color); /* Green outline for 'Now' */
+  height: 80px; /* Increased height for larger box */
 }
 
 .order-row.next {
   border: 3px solid var(--accent-color); /* Accent color outline for 'Next' */
+  height: 20px;
 }
 
 .label {
@@ -168,17 +171,30 @@ body {
 }
 
 .burger-emoticon {
-  font-size: 1.8em;
+  width: 30px; /* Adjust as needed */
+  height: 30px;
+  margin-right: 2px;
+}
+
+.order-row.now .order-content img {
+  width: 70px; /* Increased width */
+  height: 70px; /* Increased height */
+  margin-right: 8px; /* Increased margin for better spacing */
+}
+
+.order-row.next .order-content img {
+  width: 20px;
+  height: 20px;
   margin-right: 5px;
 }
 
 /* Active Burger Display */
 #active-burger-container {
+  position: relative; /* Ensures stars are positioned relative to this container */
   background-color: var(--burger-bg-color);
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  position: relative;
   overflow: hidden;
   max-width: 300px;
   margin: 0 auto 20px;
@@ -268,52 +284,112 @@ body {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* --- Updated Styles Start Here --- */
+
+/* Instruction Example Icons */
 .instruction-example {
   display: inline-flex;
-  width: 50px;
-  height: 50px;
-  line-height: 50px;
-  text-align: center;
-  background-color: var(--primary-color);
-  border-radius: 50%;
+  width: 60px; /* Increased from 40px to 60px for larger background */
+  height: 60px; /* Increased from 40px to 60px for larger background */
   margin-left: 10px;
   transition: box-shadow 0.2s ease-out;
   justify-content: center;
   align-items: center;
-  font-size: 1.4em;
-  color: var(--card-background);
+  background-color: var(--neutral-color); /* Changed to neutral color */
+  border-radius: 50%;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 2px solid #ccc; /* Neutral border for better contrast */
 }
 
+.instruction-example img {
+  max-width: 80%; /* Adjusted to fit larger background */
+  max-height: 80%;
+}
+
+/* Optional: Different neutral shades for each instruction example for better visual differentiation */
+#instructions li:nth-child(1) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Bun */
+}
+
+#instructions li:nth-child(2) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Patty */
+}
+
+#instructions li:nth-child(3) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Lettuce */
+}
+
+#instructions li:nth-child(4) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Cheese */
+}
+
+#instructions li:nth-child(5) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Tomato */
+}
+
+#instructions li:nth-child(6) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Onion */
+}
+
+#instructions li:nth-child(7) .instruction-example {
+  background-color: #f5f5f5; /* Light grey for Pickle */
+}
+
+/* Hover Effect for Instruction Examples */
 .instruction-example:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Click Instruction Overlay */
-#click-instruction {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.8); /* Slightly reduced opacity */
-  color: white;
-  padding: 10px 20px; /* Reduced padding for subtlety */
-  border-radius: 8px; /* Slightly smaller radius */
-  font-size: 1em; /* Slightly smaller font */
-  text-align: center;
-  animation: fadeInOut 4s ease-in-out infinite;
-  pointer-events: none; /* Allow clicks to pass through */
-  transition: opacity 0.5s ease; /* Added transition for smooth fade-out */
-  opacity: 1; /* Initial opacity */
+/* --- Updated Styles End Here --- */
+
+/* Active Burger Container Animation */
+.burger-completed {
+  animation: scaleUp 0.3s forwards; /* Reduced duration from 0.5s to 0.3s */
 }
 
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 0;
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
   }
-  20%, 80% {
-    opacity: 1;
+  50% {
+    transform: scale(1.05);
   }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Rules Card */
+#rules-card {
+  background-color: var(--rules-card-bg);
+  border: var(--rules-card-border);
+  padding: var(--rules-card-padding);
+  border-radius: var(--rules-card-border-radius);
+  box-shadow: var(--rules-card-box-shadow);
+  margin-top: 20px;
+}
+
+#rules-card h3 {
+  color: var(--rules-card-title-color);
+  margin-top: 0;
+  text-align: center;
+}
+
+#rules-card ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  color: var(--rules-card-text-color);
+}
+
+#rules-card li {
+  margin-bottom: 10px;
+}
+
+/* Last One! */
+.last-one {
+  color: var(--last-one-color);
+  font-weight: bold;
+  font-size: 1.2em;
 }
 
 /* Toast Notification */
@@ -462,6 +538,17 @@ body {
   #active-burger img {
     max-width: 90%;
   }
+
+  /* Adjust "Now" Order Box for Smaller Screens */
+  .order-row.now {
+    height: 100px; /* Further increased for better visibility on small screens */
+  }
+
+  .order-row.now .order-content img {
+    width: 40px;
+    height: 40px;
+    margin-right: 8px;
+  }
 }
 
 /* Press Progress Indicator */
@@ -470,8 +557,8 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
+  width: 100px; /* Reduced from 120px to 100px */
+  height: 100px; /* Reduced from 120px to 100px */
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.7);
   display: none;
@@ -481,12 +568,12 @@ body {
 }
 
 #press-progress {
-  width: 100px;
-  height: 100px;
+  width: 80px; /* Reduced from 100px to 80px */
+  height: 80px; /* Reduced from 100px to 80px */
   border-radius: 50%;
   background: conic-gradient(var(--secondary-color) 0deg, transparent 0deg);
-  transition: background 0.1s linear;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  transition: background 0.05s linear; /* Reduced transition speed */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Adjusted for smaller size */
 }
 
 #press-progress.tomato {
@@ -566,22 +653,44 @@ body {
   }
 }
 
+/* Star Animation */
 .star {
   position: absolute;
-  width: 20px;
+  width: 20px; /* Adjusted size for better visibility */
   height: 20px;
-  animation: shootingStar 1s ease-out forwards, shootingStarFade 1s ease-out forwards;
+  animation: shootingStar 0.6s ease-out forwards, shootingStarFade 0.6s ease-out forwards; /* Reduced duration to 0.6s */
   z-index: 1000;
   pointer-events: none; /* Prevent stars from capturing mouse events */
-  filter: blur(1px); /* Adds a subtle blur for trailing effect */
+  filter: blur(1px); /* Adjusted blur for subtle effect */
 }
 
-.star svg path {
-  transition: filter 0.3s ease;
+/* Ensure stars start from the center of the burger container */
+#active-burger-container .star {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.star svg path:hover {
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+/* Active Burger Container Animation */
+.burger-completed {
+  animation: scaleUp 0.3s forwards; /* Reduced duration from 0.5s to 0.3s */
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Instructions continued */
+#instructions li .instruction-example:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Rules Card */
